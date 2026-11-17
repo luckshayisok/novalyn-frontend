@@ -1,0 +1,347 @@
+/** Shapes returned by the NOVALYN API (version 1). */
+
+export type Role = 'owner' | 'admin' | 'compliance_manager' | 'member' | 'viewer'
+
+export type Permission =
+  | 'organization:read'
+  | 'organization:update'
+  | 'organization:delete'
+  | 'members:read'
+  | 'members:invite'
+  | 'members:manage'
+  | 'audit:read'
+  | 'documents:read'
+  | 'documents:write'
+  | 'documents:verify'
+  | 'documents:delete'
+  | 'entities:read'
+  | 'entities:write'
+  | 'renewals:read'
+  | 'renewals:manage'
+  | 'reports:read'
+  | 'reports:export'
+  | 'settings:manage'
+  | 'billing:manage'
+
+export interface User {
+  id: string
+  email: string
+  full_name: string
+  is_email_verified: boolean
+  created_at: string
+}
+
+export interface TokenResponse {
+  access_token: string
+  token_type: 'bearer'
+  expires_in: number
+  user: User
+}
+
+export interface Organization {
+  id: string
+  name: string
+  slug: string
+  industry: string | null
+  company_size: string | null
+  timezone: string
+  document_categories: string[]
+  onboarding_completed_at: string | null
+  created_at: string
+  role: Role
+  permissions: Permission[]
+}
+
+export interface Me {
+  user: User
+  organizations: Organization[]
+}
+
+export interface Member {
+  id: string
+  role: Role
+  user: User
+  joined_at: string
+  is_self: boolean
+}
+
+export type InvitationStatus = 'pending' | 'expired' | 'accepted' | 'revoked'
+
+export interface Invitation {
+  id: string
+  email: string
+  role: Role
+  status: InvitationStatus
+  expires_at: string
+  last_sent_at: string
+  created_at: string
+  invited_by_name: string | null
+}
+
+export interface InvitationPreview {
+  organization_name: string
+  email: string
+  role: Role
+  status: InvitationStatus
+  invited_by_name: string | null
+}
+
+export interface AuditLogEntry {
+  id: string
+  action: string
+  resource_type: string
+  resource_id: string | null
+  metadata: Record<string, unknown>
+  actor: { id: string; full_name: string; email: string } | null
+  created_at: string
+}
+
+export interface Page<T> {
+  items: T[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export interface Option {
+  value: string
+  label: string
+  description: string | null
+}
+
+export interface Options {
+  industries: Option[]
+  company_sizes: Option[]
+  document_categories: Option[]
+  roles: Option[]
+}
+
+export interface Message {
+  message: string
+}
+
+export interface OrganizationUpdate {
+  name?: string
+  industry?: string | null
+  company_size?: string | null
+  timezone?: string
+  document_categories?: string[]
+}
+
+// ---------------------------------------------------------------- documents
+
+export type DocumentStatus = 'valid' | 'expiring_soon' | 'expired' | 'archived'
+export type VerificationStatus = 'pending' | 'verified' | 'rejected'
+export type EntityType = 'employee' | 'supplier' | 'equipment' | 'location' | 'department'
+
+export interface EntityRef {
+  id: string
+  name: string
+  type: EntityType
+}
+
+export interface OwnerRef {
+  membership_id: string
+  full_name: string
+  email: string
+}
+
+export interface DocumentVersion {
+  id: string
+  version_number: number
+  original_filename: string
+  content_type: string
+  size_bytes: number
+  sha256: string
+  note: string | null
+  uploaded_by_name: string | null
+  created_at: string
+  previewable: boolean
+}
+
+export interface DocumentSummary {
+  id: string
+  name: string
+  category: string
+  document_number: string | null
+  issuing_authority: string | null
+  holder_name: string | null
+  /** Calendar dates, `YYYY-MM-DD`. */
+  issue_date: string | null
+  expiry_date: string | null
+  notes: string | null
+  status: DocumentStatus
+  days_until_expiry: number | null
+  verification_status: VerificationStatus
+  verified_at: string | null
+  verified_by_name: string | null
+  rejection_reason: string | null
+  entity: EntityRef | null
+  owner: OwnerRef | null
+  current_version: DocumentVersion | null
+  version_count: number
+  extraction_status: ExtractionStatus | null
+  archived_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DocumentDetail extends DocumentSummary {
+  versions: DocumentVersion[]
+}
+
+/** Editable document details. `null` clears an optional field. */
+export interface DocumentFields {
+  name?: string
+  category?: string
+  document_number?: string | null
+  issuing_authority?: string | null
+  holder_name?: string | null
+  issue_date?: string | null
+  expiry_date?: string | null
+  notes?: string | null
+  entity_id?: string | null
+  owner_membership_id?: string | null
+}
+
+export interface DocumentListParams {
+  q?: string
+  category?: string
+  status?: Exclude<DocumentStatus, 'archived'>
+  verification?: VerificationStatus
+  entity_id?: string
+  archived?: boolean
+  suggestions?: boolean
+  sort?: string
+  page?: number
+  page_size?: number
+}
+
+export interface Entity {
+  id: string
+  type: EntityType
+  name: string
+  code: string | null
+  email: string | null
+  phone: string | null
+  contact_name: string | null
+  address: string | null
+  notes: string | null
+  location: EntityRef | null
+  department: EntityRef | null
+  owner: OwnerRef | null
+  archived_at: string | null
+  created_at: string
+  updated_at: string
+  document_count: number
+  expiring_soon_count: number
+  expired_count: number
+}
+
+export interface EntityFields {
+  name?: string
+  code?: string | null
+  email?: string | null
+  phone?: string | null
+  contact_name?: string | null
+  address?: string | null
+  notes?: string | null
+  location_id?: string | null
+  department_id?: string | null
+  owner_membership_id?: string | null
+}
+
+export interface EntityTypeCount {
+  type: EntityType
+  label: string
+  count: number
+}
+
+export interface Dashboard {
+  today: string
+  expiring_window_days: number
+  metrics: {
+    total: number
+    valid: number
+    expiring_soon: number
+    expired: number
+    pending_verification: number
+    archived: number
+    suggestions_to_review: number
+  }
+  by_category: Array<{ category: string; label: string; count: number }>
+  upcoming_expirations: Array<{ month: string; count: number }>
+  by_group: Array<{ entity_id: string; name: string; type: EntityType; count: number }>
+  ungrouped_count: number
+  expiring_documents: DocumentSummary[]
+  expired_documents: DocumentSummary[]
+  recent_documents: DocumentSummary[]
+}
+
+export interface SearchResults {
+  documents: DocumentSummary[]
+  entities: EntityRef[]
+}
+
+export interface FileUrl {
+  url: string
+  expires_in: number
+}
+
+// --------------------------------------------------------------- extraction
+
+export type ExtractionStatus =
+  | 'pending'
+  | 'processing'
+  | 'extraction_completed'
+  | 'review_required'
+  | 'failed'
+  | 'verified'
+  | 'dismissed'
+
+/** Keys of the details a reader can suggest. */
+export type ExtractedKey =
+  | 'name'
+  | 'category'
+  | 'document_number'
+  | 'issuing_authority'
+  | 'holder_name'
+  | 'issue_date'
+  | 'expiry_date'
+  | 'organization_mentioned'
+  | 'entity_id'
+
+export interface ExtractedField {
+  value: string | null
+  /** 0 to 1. */
+  confidence: number
+  evidence: string | null
+  note: string | null
+  /** The text as written on the document, for dates and matched records. */
+  raw: string | null
+}
+
+export interface Extraction {
+  id: string
+  version_id: string
+  status: ExtractionStatus
+  provider: string | null
+  provider_label: string | null
+  model: string | null
+  text_source: string | null
+  text_source_label: string | null
+  fields: Partial<Record<ExtractedKey, ExtractedField>>
+  warnings: string[]
+  error: string | null
+  attempts: number
+  started_at: string | null
+  completed_at: string | null
+  reviewed_by_name: string | null
+  reviewed_at: string | null
+  applied_fields: string[]
+}
+
+export interface ExtractionState {
+  enabled: boolean
+  extraction: Extraction | null
+}
