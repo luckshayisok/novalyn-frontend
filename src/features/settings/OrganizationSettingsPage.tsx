@@ -15,6 +15,7 @@ import { Checkbox, NativeSelect } from '@/components/ui/select'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { applyFieldErrors } from '@/features/auth/schemas'
 import { useOrganization } from '@/hooks/useOrganization'
+import { ReminderSettings } from './ReminderSettings'
 import { errorMessage } from '@/lib/http'
 import { paths } from '@/routes/paths'
 import { organizationService, queryKeys } from '@/services/organizations'
@@ -230,6 +231,8 @@ export function OrganizationSettingsPage() {
           )}
         </Card>
       </form>
+
+      <ReminderSettings />
 
       <Card className="mt-6">
         <CardHeader>

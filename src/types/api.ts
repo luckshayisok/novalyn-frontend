@@ -47,6 +47,8 @@ export interface Organization {
   timezone: string
   document_categories: string[]
   onboarding_completed_at: string | null
+  reminders_enabled: boolean
+  reminder_offsets: number[]
   created_at: string
   role: Role
   permissions: Permission[]
@@ -126,6 +128,8 @@ export interface OrganizationUpdate {
   company_size?: string | null
   timezone?: string
   document_categories?: string[]
+  reminders_enabled?: boolean
+  reminder_offsets?: number[]
 }
 
 // ---------------------------------------------------------------- documents
@@ -157,6 +161,7 @@ export interface DocumentVersion {
   uploaded_by_name: string | null
   created_at: string
   previewable: boolean
+  state: 'active' | 'pending' | 'rejected'
 }
 
 export interface DocumentSummary {
@@ -181,6 +186,7 @@ export interface DocumentSummary {
   current_version: DocumentVersion | null
   version_count: number
   extraction_status: ExtractionStatus | null
+  renewal: OpenRenewal | null
   archived_at: string | null
   created_at: string
   updated_at: string
@@ -268,6 +274,9 @@ export interface Dashboard {
     pending_verification: number
     archived: number
     suggestions_to_review: number
+    renewals_in_progress: number
+    renewals_overdue: number
+    renewals_awaiting_approval: number
   }
   by_category: Array<{ category: string; label: string; count: number }>
   upcoming_expirations: Array<{ month: string; count: number }>
@@ -276,6 +285,8 @@ export interface Dashboard {
   expiring_documents: DocumentSummary[]
   expired_documents: DocumentSummary[]
   recent_documents: DocumentSummary[]
+  open_renewals: DashboardRenewal[]
+  renewal_trend: Array<{ month: string; started: number; completed: number }>
 }
 
 export interface SearchResults {
@@ -344,4 +355,90 @@ export interface Extraction {
 export interface ExtractionState {
   enabled: boolean
   extraction: Extraction | null
+}
+
+// ---------------------------------------------------------------- lifecycle
+
+export type RenewalStatus =
+  | 'not_started'
+  | 'requested'
+  | 'in_progress'
+  | 'submitted'
+  | 'awaiting_approval'
+  | 'completed'
+  | 'rejected'
+
+export interface OpenRenewal {
+  id: string
+  status: RenewalStatus
+  deadline: string | null
+  assignee: OwnerRef | null
+}
+
+export interface DashboardRenewal {
+  id: string
+  status: RenewalStatus
+  deadline: string | null
+  days_to_deadline: number | null
+  overdue: boolean
+  document_id: string
+  document_name: string
+  assignee_name: string | null
+}
+
+export interface RenewalSummary {
+  id: string
+  status: RenewalStatus
+  deadline: string | null
+  days_to_deadline: number | null
+  overdue: boolean
+  assignee: OwnerRef | null
+  document: {
+    id: string
+    name: string
+    category: string
+    expiry_date: string | null
+    status: DocumentStatus
+    entity: EntityRef | null
+  }
+  created_at: string
+  updated_at: string
+}
+
+export type RenewalAction = 'edit' | 'request' | 'start' | 'upload' | 'submit' | 'approve' | 'reject' | 'reopen'
+
+export interface RenewalEvent {
+  id: string
+  action: string
+  from_status: RenewalStatus | null
+  to_status: RenewalStatus
+  note: string | null
+  actor_name: string | null
+  created_at: string
+}
+
+export interface RenewalDetail extends RenewalSummary {
+  notes: string | null
+  previous_expiry_date: string | null
+  proposed_issue_date: string | null
+  proposed_expiry_date: string | null
+  suggested_expiry_date: string | null
+  new_version: DocumentVersion | null
+  rejection_reason: string | null
+  created_by_name: string | null
+  completed_at: string | null
+  completed_by_name: string | null
+  events: RenewalEvent[]
+  can: Record<RenewalAction, boolean>
+}
+
+export interface AppNotification {
+  id: string
+  type: string
+  title: string
+  body: string
+  /** A path inside the organization, for example `documents/<id>`. */
+  link: string | null
+  read_at: string | null
+  created_at: string
 }

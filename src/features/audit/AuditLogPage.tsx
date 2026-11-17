@@ -21,6 +21,7 @@ const PAGE_SIZE = 25
 const FILTERS = [
   { value: '', label: 'All activity' },
   { value: 'document.', label: 'Documents' },
+  { value: 'renewal.', label: 'Renewals' },
   { value: 'entity.', label: 'Entities' },
   { value: 'member.', label: 'Team' },
   { value: 'organization.', label: 'Organization' },

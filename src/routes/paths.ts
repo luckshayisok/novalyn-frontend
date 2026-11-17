@@ -16,6 +16,8 @@ export const paths = {
     upload: `/o/${slug}/documents/upload`,
     document: (documentId: string) => `/o/${slug}/documents/${documentId}`,
     entities: `/o/${slug}/entities`,
+    renewals: `/o/${slug}/renewals`,
+    renewal: (renewalId: string) => `/o/${slug}/renewals/${renewalId}`,
     entity: (entityId: string) => `/o/${slug}/entities/${entityId}`,
     team: `/o/${slug}/team`,
     auditLog: `/o/${slug}/audit-log`,

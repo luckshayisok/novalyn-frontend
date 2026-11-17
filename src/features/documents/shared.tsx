@@ -73,7 +73,7 @@ export function expiryPhrase(document: Pick<DocumentSummary, 'days_until_expiry'
   return `Expires in ${plural(days, 'day')}`
 }
 
-export function StatusBadge({ document }: { document: DocumentSummary }) {
+export function StatusBadge({ document }: { document: Pick<DocumentSummary, 'status' | 'expiry_date'> }) {
   switch (document.status) {
     case 'archived':
       return <Badge variant="neutral">Archived</Badge>

@@ -7,6 +7,7 @@ import {
   Download,
   EyeOff,
   Pencil,
+  RefreshCcw,
   RefreshCw,
   XCircle,
 } from 'lucide-react'
@@ -28,6 +29,8 @@ import type { DocumentDetail, DocumentVersion } from '@/types/api'
 
 import { EditDocumentDialog, RejectDialog, ReplaceFileDialog } from './DocumentDialogs'
 import { ExtractionPanel } from './ExtractionPanel'
+import { RENEWAL_STATUS } from '@/features/renewals/shared'
+import { StartRenewalDialog } from '@/features/renewals/StartRenewalDialog'
 import {
   expiryPhrase,
   FileIcon,
@@ -100,7 +103,7 @@ export function DocumentDetailPage() {
   const queryClient = useQueryClient()
   const refresh = useRefreshDocuments(organization.id)
 
-  const [dialog, setDialog] = useState<'edit' | 'replace' | 'reject' | 'archive' | null>(null)
+  const [dialog, setDialog] = useState<'edit' | 'replace' | 'reject' | 'archive' | 'renew' | null>(null)
 
   const query = useQuery({
     queryKey: documentKeys.detail(organization.id, documentId),
@@ -200,12 +203,20 @@ export function DocumentDetailPage() {
               Download
             </Button>
           )}
+          {can('renewals:manage') && !archived && !document.renewal && (
+            <Button onClick={() => setDialog('renew')}>
+              <RefreshCcw aria-hidden />
+              Start renewal
+            </Button>
+          )}
           {canWrite && (
             <>
-              <Button variant="outline" onClick={() => setDialog('replace')}>
-                <RefreshCw aria-hidden />
-                Replace file
-              </Button>
+              {!document.renewal && (
+                <Button variant="outline" onClick={() => setDialog('replace')}>
+                  <RefreshCw aria-hidden />
+                  Replace file
+                </Button>
+              )}
               <Button variant="outline" onClick={() => setDialog('edit')}>
                 <Pencil aria-hidden />
                 Edit details
@@ -226,6 +237,23 @@ export function DocumentDetailPage() {
             ))}
         </div>
       </div>
+
+      {document.renewal && (
+        <Notice
+          variant="info"
+          title={`Renewal ${RENEWAL_STATUS[document.renewal.status].label.toLowerCase()}`}
+          className="mb-6"
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link to={org.renewal(document.renewal.id)}>Open renewal</Link>
+            </Button>
+          }
+        >
+          {document.renewal.assignee ? `Assigned to ${document.renewal.assignee.full_name}` : 'Not assigned yet'}
+          {document.renewal.deadline && `, due ${formatDay(document.renewal.deadline)}`}. Upload the renewed file to the
+          renewal; it replaces this one once approved.
+        </Notice>
+      )}
 
       <ExtractionPanel document={document} />
 
@@ -328,13 +356,15 @@ export function DocumentDetailPage() {
             </CardHeader>
             <CardContent>
               <ul className="divide-y">
-                {document.versions.map((version, index) => (
+                {document.versions.map((version) => (
                   <li key={version.id} className="flex items-start gap-3 py-3">
                     <FileIcon version={version} className="mt-0.5" />
                     <div className="min-w-0 flex-1 text-[13px]">
                       <p className="flex flex-wrap items-center gap-2 font-medium">
                         Version {version.version_number}
-                        {index === 0 && <Badge variant="brand">Current</Badge>}
+                        {version.id === document.current_version?.id && <Badge variant="brand">Current</Badge>}
+                        {version.state === 'pending' && <Badge variant="warning">Awaiting renewal approval</Badge>}
+                        {version.state === 'rejected' && <Badge variant="outline">Not used</Badge>}
                       </p>
                       <p className="truncate text-muted-foreground">
                         {version.original_filename} · {formatBytes(version.size_bytes)}
@@ -378,6 +408,9 @@ export function DocumentDetailPage() {
           onOpenChange={(open) => !open && setDialog(null)}
           onSaved={saved}
         />
+      )}
+      {dialog === 'renew' && (
+        <StartRenewalDialog document={document} open onOpenChange={(open) => !open && setDialog(null)} />
       )}
       {dialog === 'reject' && (
         <RejectDialog

@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   Plus,
+  RefreshCcw,
   ScrollText,
   Settings,
   UserRound,
@@ -22,6 +23,7 @@ import { toast } from 'sonner'
 import { Logo } from '@/components/shared/Logo'
 
 import { GlobalSearch } from './GlobalSearch'
+import { NotificationBell } from './NotificationBell'
 import { RoleBadge, UserAvatar } from '@/components/shared/misc'
 import { Button } from '@/components/ui/button'
 import {
@@ -52,6 +54,7 @@ function useNavItems(): NavItem[] {
   const items: NavItem[] = [
     { label: 'Overview', to: org.overview, icon: LayoutDashboard },
     { label: 'Documents', to: org.documents, icon: FileText, permission: 'documents:read' },
+    { label: 'Renewals', to: org.renewals, icon: RefreshCcw, permission: 'renewals:read' },
     { label: 'Entities', to: org.entities, icon: Boxes, permission: 'entities:read' },
     { label: 'Team', to: org.team, icon: Users, permission: 'members:read' },
     { label: 'Audit Logs', to: org.auditLog, icon: ScrollText, permission: 'audit:read' },
@@ -246,6 +249,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <GlobalSearch />
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <NotificationBell />
           <UserMenu />
         </div>
       </header>

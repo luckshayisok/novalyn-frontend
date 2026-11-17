@@ -6,6 +6,8 @@ import { DocumentsPage } from '@/features/documents/DocumentsPage'
 import { UploadPage } from '@/features/documents/UploadPage'
 import { EntitiesPage } from '@/features/entities/EntitiesPage'
 import { EntityDetailPage } from '@/features/entities/EntityDetailPage'
+import { RenewalDetailPage } from '@/features/renewals/RenewalDetailPage'
+import { RenewalsPage } from '@/features/renewals/RenewalsPage'
 import { AcceptInvitePage } from '@/features/auth/AcceptInvitePage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ForgotPasswordPage, ResetPasswordPage } from '@/features/auth/PasswordPages'
@@ -64,6 +66,8 @@ export const router = createBrowserRouter([
               { path: 'documents', element: <DocumentsPage /> },
               { path: 'documents/upload', element: <UploadPage /> },
               { path: 'documents/:documentId', element: <DocumentDetailPage /> },
+              { path: 'renewals', element: <RenewalsPage /> },
+              { path: 'renewals/:renewalId', element: <RenewalDetailPage /> },
               { path: 'entities', element: <EntitiesPage /> },
               { path: 'entities/:entityId', element: <EntityDetailPage /> },
               { path: 'team', element: <TeamPage /> },

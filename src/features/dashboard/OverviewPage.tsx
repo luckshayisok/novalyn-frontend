@@ -31,7 +31,8 @@ import { documentKeys, insightService } from '@/services/documents'
 import { auditService, invitationService, memberService, queryKeys } from '@/services/organizations'
 import type { Dashboard, DocumentSummary } from '@/types/api'
 
-import { HorizontalBars, StatusDonut, UpcomingExpirationsChart } from './charts'
+import { HorizontalBars, RenewalTrendChart, StatusDonut, UpcomingExpirationsChart } from './charts'
+import { deadlinePhrase, RenewalBadge } from '@/features/renewals/shared'
 
 type Tone = 'success' | 'warning' | 'destructive' | 'neutral'
 
@@ -298,6 +299,49 @@ function DashboardBody({ data }: { data: Dashboard }) {
               )}
             </>
           )}
+        </Panel>
+
+        <Panel
+          title="Renewals"
+          description={
+            metrics.renewals_in_progress === 0
+              ? 'No renewals in progress.'
+              : `${metrics.renewals_in_progress} in progress, ${metrics.renewals_overdue} overdue, ${metrics.renewals_awaiting_approval} awaiting approval.`
+          }
+          action={can('renewals:read') ? <ViewAll to={org.renewals} /> : undefined}
+        >
+          {data.open_renewals.length === 0 ? (
+            <p className="py-4 text-center text-[13px] text-muted-foreground">
+              Start a renewal from a document's page when it is due.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {data.open_renewals.map((renewal) => (
+                <li key={renewal.id}>
+                  <Link
+                    to={org.renewal(renewal.id)}
+                    className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/60"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{renewal.document_name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {renewal.assignee_name ?? 'Nobody assigned'}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-1 text-xs">
+                      <RenewalBadge status={renewal.status} />
+                      <span className={renewal.overdue ? 'text-destructive' : 'text-muted-foreground'}>
+                        {deadlinePhrase(renewal.days_to_deadline)}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+        <Panel title="Renewals per month" description="Started and completed in the last six months.">
+          <RenewalTrendChart data={data.renewal_trend} />
         </Panel>
 
         <Panel title="Recently uploaded" action={<ViewAll to={`${org.documents}?sort=-created_at`} />}>

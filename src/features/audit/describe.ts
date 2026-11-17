@@ -91,6 +91,22 @@ export function describeAuditEntry(entry: AuditLogEntry): string {
       return `Closed the suggestions for ${text(data.name)}`
     case 'document.extraction_retried':
       return `Asked for ${text(data.name)} to be read again`
+    case 'renewal.created':
+      return `Started a renewal of ${text(data.document)}`
+    case 'renewal.requested':
+      return `Requested the renewal of ${text(data.document)}`
+    case 'renewal.updated':
+      return `Changed the renewal of ${text(data.document)}`
+    case 'renewal.file_uploaded':
+      return `Uploaded the renewed ${text(data.document)}`
+    case 'renewal.submitted':
+      return `Sent the renewal of ${text(data.document)} for approval`
+    case 'renewal.completed':
+      return `Approved the renewal of ${text(data.document)}`
+    case 'renewal.rejected':
+      return `Rejected the renewal of ${text(data.document)}: ${text(data.reason)}`
+    case 'renewal.reopened':
+      return `Reopened the renewal of ${text(data.document)}`
     case 'entity.created':
       return `Added ${text(data.name)}`
     case 'entity.updated':

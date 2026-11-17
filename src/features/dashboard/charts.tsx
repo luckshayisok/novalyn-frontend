@@ -127,3 +127,35 @@ export function HorizontalBars({ rows, label }: { rows: Array<{ name: string; co
     </div>
   )
 }
+
+/** Renewals started and completed per month: two series, side by side, with a legend. */
+export function RenewalTrendChart({ data }: { data: Dashboard['renewal_trend'] }) {
+  const rows = data.map((item) => ({ label: formatMonth(item.month), started: item.started, completed: item.completed }))
+  const summary = rows.map((row) => `${row.label}: ${row.started} started, ${row.completed} completed`).join('; ')
+  return (
+    <div>
+      <div className="mb-2 flex gap-4 text-xs text-muted-foreground" aria-hidden>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-sm" style={{ background: 'var(--brand)', opacity: 0.35 }} />
+          Started
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-sm" style={{ background: 'var(--success)' }} />
+          Completed
+        </span>
+      </div>
+      <div className="h-48" role="img" aria-label={`Renewals per month. ${summary}`}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={rows} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
+            <CartesianGrid vertical={false} stroke={TOKENS.grid} />
+            <XAxis dataKey="label" {...axisProps} />
+            <YAxis allowDecimals={false} {...axisProps} />
+            <Tooltip {...tooltipStyle} />
+            <Bar dataKey="started" name="Started" fill={TOKENS.brand} fillOpacity={0.35} radius={[3, 3, 0, 0]} maxBarSize={22} isAnimationActive={false} />
+            <Bar dataKey="completed" name="Completed" fill={TOKENS.success} radius={[3, 3, 0, 0]} maxBarSize={22} isAnimationActive={false} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
