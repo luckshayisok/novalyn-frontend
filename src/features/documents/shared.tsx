@@ -218,7 +218,14 @@ export function DocumentTable({ documents, organizationSlug, categoryLabel, hide
               <StatusBadge document={document} />
             </TableCell>
             <TableCell className="pr-5">
-              <VerificationBadge status={document.verification_status} />
+              <span className="flex flex-wrap items-center gap-1.5">
+                <VerificationBadge status={document.verification_status} />
+                {(document.extraction_status === 'extraction_completed' ||
+                  document.extraction_status === 'review_required') && <Badge variant="brand">Suggestions</Badge>}
+                {(document.extraction_status === 'pending' || document.extraction_status === 'processing') && (
+                  <Badge variant="outline">Reading…</Badge>
+                )}
+              </span>
             </TableCell>
           </TableRow>
         ))}

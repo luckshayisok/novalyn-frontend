@@ -27,6 +27,7 @@ import { absoluteFileUrl, documentKeys, documentService } from '@/services/docum
 import type { DocumentDetail, DocumentVersion } from '@/types/api'
 
 import { EditDocumentDialog, RejectDialog, ReplaceFileDialog } from './DocumentDialogs'
+import { ExtractionPanel } from './ExtractionPanel'
 import {
   expiryPhrase,
   FileIcon,
@@ -225,6 +226,8 @@ export function DocumentDetailPage() {
             ))}
         </div>
       </div>
+
+      <ExtractionPanel document={document} />
 
       {archived && (
         <Notice variant="info" title="This document is archived" className="mb-6">

@@ -85,6 +85,12 @@ export function describeAuditEntry(entry: AuditLogEntry): string {
       return `Archived ${text(data.name)}`
     case 'document.restored':
       return `Restored ${text(data.name)}`
+    case 'document.extraction_applied':
+      return `Saved suggested ${fieldList(data.fields)} for ${text(data.name)}${data.verified ? ' and verified it' : ''}`
+    case 'document.extraction_dismissed':
+      return `Closed the suggestions for ${text(data.name)}`
+    case 'document.extraction_retried':
+      return `Asked for ${text(data.name)} to be read again`
     case 'entity.created':
       return `Added ${text(data.name)}`
     case 'entity.updated':

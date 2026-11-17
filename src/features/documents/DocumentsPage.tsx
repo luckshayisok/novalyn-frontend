@@ -31,6 +31,7 @@ const REVIEW_OPTIONS = [
   { value: 'pending', label: 'Pending review' },
   { value: 'verified', label: 'Verified' },
   { value: 'rejected', label: 'Rejected' },
+  { value: 'suggestions', label: 'Suggestions to review' },
 ] as const
 
 const SORT_OPTIONS = [
@@ -57,7 +58,8 @@ export function DocumentsPage() {
   const q = searchParams.get('q') ?? ''
   const category = searchParams.get('category') ?? ''
   const status = oneOf(searchParams.get('status'), ['valid', 'expiring_soon', 'expired', 'archived'] as const) ?? ''
-  const verification = oneOf(searchParams.get('review'), ['pending', 'verified', 'rejected'] as const) ?? ''
+  const verification =
+    oneOf(searchParams.get('review'), ['pending', 'verified', 'rejected', 'suggestions'] as const) ?? ''
   const sort = oneOf(searchParams.get('sort'), SORT_OPTIONS.map((item) => item.value)) ?? 'expiry_date'
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const hasFilters = Boolean(q || category || status || verification)
@@ -75,7 +77,10 @@ export function DocumentsPage() {
     category: category || undefined,
     status: status && status !== 'archived' ? status : undefined,
     archived: status === 'archived',
-    verification: (verification || undefined) as VerificationStatus | undefined,
+    verification: (verification && verification !== 'suggestions' ? verification : undefined) as
+      | VerificationStatus
+      | undefined,
+    suggestions: verification === 'suggestions' || undefined,
     sort,
     page,
     page_size: PAGE_SIZE,

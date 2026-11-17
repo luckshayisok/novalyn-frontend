@@ -16,7 +16,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import { PageHeader } from '@/components/shared/misc'
-import { EmptyState, ErrorState } from '@/components/shared/states'
+import { EmptyState, ErrorState, Notice } from '@/components/shared/states'
 import { Skeleton } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -181,6 +181,22 @@ function DashboardBody({ data }: { data: Dashboard }) {
 
   return (
     <>
+      {metrics.suggestions_to_review > 0 && (
+        <Notice
+          variant="info"
+          title="Suggested details are waiting"
+          className="mb-6"
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link to={`${org.documents}?review=suggestions`}>Review</Link>
+            </Button>
+          }
+        >
+          {metrics.suggestions_to_review}{' '}
+          {metrics.suggestions_to_review === 1 ? 'document has' : 'documents have'} details read from the file that
+          nobody has checked yet.
+        </Notice>
+      )}
       <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-5">
         <Metric
           label="Total documents"
