@@ -16,6 +16,8 @@ export const authService = {
 
   updateProfile: (input: { full_name: string }) => api<User>('/auth/me', { method: 'PATCH', body: input }),
 
+  deleteAccount: (password: string) => api<void>('/auth/me', { method: 'DELETE', body: { password } }),
+
   verifyEmail: (token: string) =>
     api<User>('/auth/verify-email', { method: 'POST', body: { token }, auth: false }),
 

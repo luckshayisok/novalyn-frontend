@@ -191,6 +191,66 @@ function SessionsCard() {
   )
 }
 
+function DeleteAccountCard() {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [password, setPassword] = useState('')
+
+  const deleteAccount = async () => {
+    await authService.deleteAccount(password)
+    // The server has ended the session; clear what this browser still holds.
+    await logout().catch(() => undefined)
+    toast.success('Your account has been deleted.')
+    navigate(paths.login, { replace: true })
+  }
+
+  return (
+    <Card className="border-destructive/30">
+      <CardHeader>
+        <CardTitle>Delete account</CardTitle>
+        <CardDescription>
+          Removes your account, your sign-in and your notifications for good. Documents you uploaded stay with
+          their organizations, shown as uploaded by a deleted user. If you are the only owner of an
+          organization, make someone else an owner or delete the organization first.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline" className="text-destructive hover:bg-destructive-soft" onClick={() => setOpen(true)}>
+          Delete my account
+        </Button>
+      </CardContent>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next)
+          if (!next) setPassword('')
+        }}
+        title="Delete your account?"
+        description={
+          <div className="flex flex-col gap-3">
+            <p>This cannot be undone. Enter your password to confirm.</p>
+            <FormField label="Password">
+              {(field) => (
+                <Input
+                  {...field}
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              )}
+            </FormField>
+          </div>
+        }
+        confirmLabel="Delete account"
+        destructive
+        onConfirm={deleteAccount}
+      />
+    </Card>
+  )
+}
+
 export function AccountSettingsPage() {
   return (
     <>
@@ -199,6 +259,7 @@ export function AccountSettingsPage() {
         <ProfileCard />
         <PasswordCard />
         <SessionsCard />
+        <DeleteAccountCard />
       </div>
     </>
   )

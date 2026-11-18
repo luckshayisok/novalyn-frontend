@@ -24,6 +24,7 @@ import { Link, NavLink, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { Logo } from '@/components/shared/Logo'
+import { Notice } from '@/components/shared/states'
 
 import { GlobalSearch } from './GlobalSearch'
 import { NotificationBell } from './NotificationBell'
@@ -40,7 +41,7 @@ import {
 import { useAuth, useCurrentUser } from '@/features/auth/AuthProvider'
 import { useOrganization } from '@/hooks/useOrganization'
 import { errorMessage } from '@/lib/http'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import { paths, withNext } from '@/routes/paths'
 import type { Permission } from '@/types/api'
 
@@ -228,6 +229,30 @@ function MobileSidebar({ open, onOpenChange }: { open: boolean; onOpenChange: (o
   )
 }
 
+/** Shown on every page while the organization is scheduled for deletion. */
+function DeletionBanner() {
+  const { organization, can } = useOrganization()
+  if (!organization.deletion_scheduled_for) return null
+  return (
+    <Notice
+      variant="warning"
+      className="mb-6"
+      title={`${organization.name} will be deleted on ${formatDate(organization.deletion_scheduled_for)}`}
+      action={
+        can('organization:delete') ? (
+          <Button asChild variant="outline" size="sm">
+            <Link to={paths.org(organization.slug).settings}>Review</Link>
+          </Button>
+        ) : undefined
+      }
+    >
+      {can('organization:delete')
+        ? 'Every document and record will be erased. You can cancel in the settings until then.'
+        : 'Every document and record will be erased. Ask an owner if this is a mistake.'}
+    </Notice>
+  )
+}
+
 /** Signed-in frame: sidebar navigation, header with organization switcher and account menu. */
 export function AppShell({ children }: { children: ReactNode }) {
   // The mobile drawer closes itself when one of its links is followed.
@@ -260,7 +285,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        <DeletionBanner />
+        {children}
+      </main>
     </div>
   )
 }

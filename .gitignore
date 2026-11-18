@@ -28,3 +28,8 @@ dist-ssr
 .env.*
 !.env.example
 *.tsbuildinfo
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/

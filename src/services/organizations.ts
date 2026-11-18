@@ -25,6 +25,12 @@ export const organizationService = {
 
   leave: (organizationId: string) => api<void>(`${org(organizationId)}/leave`, { method: 'POST' }),
 
+  scheduleDeletion: (organizationId: string, confirmName: string) =>
+    api<Organization>(`${org(organizationId)}/deletion`, { method: 'POST', body: { confirm_name: confirmName } }),
+
+  cancelDeletion: (organizationId: string) =>
+    api<Organization>(`${org(organizationId)}/deletion`, { method: 'DELETE' }),
+
   options: () => api<Options>('/meta/options', { auth: false }),
 }
 

@@ -4,6 +4,26 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
+/**
+ * The production Content-Security-Policy, as in security-headers.conf (nginx), minus
+ * upgrade-insecure-requests so it also works on http://localhost. `npm run preview` serves
+ * the production build with it, so a policy violation shows up before deployment.
+ * The development server cannot use it: hot reloading needs inline scripts.
+ */
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "frame-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -21,6 +41,19 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': { target: apiTarget, changeOrigin: false },
+      },
+    },
+    preview: {
+      port: 4173,
+      strictPort: true,
+      proxy: {
+        '/api': { target: apiTarget, changeOrigin: false },
+      },
+      headers: {
+        'Content-Security-Policy': CONTENT_SECURITY_POLICY,
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
       },
     },
   }

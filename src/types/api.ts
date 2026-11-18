@@ -49,6 +49,8 @@ export interface Organization {
   onboarding_completed_at: string | null
   reminders_enabled: boolean
   reminder_offsets: number[]
+  /** Set when an owner asked to delete the organization: the day its data is erased. */
+  deletion_scheduled_for: string | null
   created_at: string
   role: Role
   permissions: Permission[]

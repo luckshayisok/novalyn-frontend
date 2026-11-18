@@ -17,6 +17,7 @@ import { applyFieldErrors } from '@/features/auth/schemas'
 import { useOrganization } from '@/hooks/useOrganization'
 import { ReminderSettings } from './ReminderSettings'
 import { errorMessage } from '@/lib/http'
+import { formatDate } from '@/lib/utils'
 import { paths } from '@/routes/paths'
 import { organizationService, queryKeys } from '@/services/organizations'
 import type { Organization, OrganizationUpdate } from '@/types/api'
@@ -57,6 +58,10 @@ export function OrganizationSettingsPage() {
   const editable = can('organization:update')
   const [formError, setFormError] = useState<string | null>(null)
   const [leaveOpen, setLeaveOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [confirmName, setConfirmName] = useState('')
+  const canDelete = can('organization:delete')
+  const scheduled = organization.deletion_scheduled_for
 
   const options = useQuery({
     queryKey: queryKeys.options,
@@ -108,6 +113,23 @@ export function OrganizationSettingsPage() {
     await reload()
     toast.success(`You left ${organization.name}.`)
     navigate(paths.home, { replace: true })
+  }
+
+  const scheduleDeletion = async () => {
+    await organizationService.scheduleDeletion(organization.id, confirmName)
+    await reload()
+    setConfirmName('')
+    toast.success('Deletion scheduled. Owners and admins have been emailed.')
+  }
+
+  const cancelDeletion = async () => {
+    try {
+      await organizationService.cancelDeletion(organization.id)
+      await reload()
+      toast.success('Deletion cancelled. Nothing will be erased.')
+    } catch (error) {
+      toast.error(errorMessage(error))
+    }
   }
 
   if (options.isPending) return <PageLoader label="Loading settings" />
@@ -247,6 +269,63 @@ export function OrganizationSettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {canDelete && (
+        <Card className="mt-6 border-destructive/30">
+          <CardHeader>
+            <CardTitle>Delete organization</CardTitle>
+            <CardDescription>
+              Erases every document, file, record and the activity history of {organization.name} after a
+              30-day grace period. Accounts of members are not deleted.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {scheduled ? (
+              <Notice
+                variant="warning"
+                title={`Scheduled for deletion on ${formatDate(scheduled)}`}
+                action={
+                  <Button variant="outline" size="sm" onClick={() => void cancelDeletion()}>
+                    Cancel deletion
+                  </Button>
+                }
+              >
+                Until then everything keeps working, and any owner can cancel.
+              </Notice>
+            ) : (
+              <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+                Delete {organization.name}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          setDeleteOpen(open)
+          if (!open) setConfirmName('')
+        }}
+        title={`Delete ${organization.name}?`}
+        description={
+          <div className="flex flex-col gap-3">
+            <p>
+              In 30 days every document, file and record of this organization is erased for good. Owners and
+              admins are emailed now, and any owner can cancel until then. If you pay for a plan, cancel it on
+              the billing page first.
+            </p>
+            <FormField label={`Type ${organization.name} to confirm`}>
+              {(field) => (
+                <Input {...field} value={confirmName} autoComplete="off" onChange={(event) => setConfirmName(event.target.value)} />
+              )}
+            </FormField>
+          </div>
+        }
+        confirmLabel="Schedule deletion"
+        destructive
+        onConfirm={scheduleDeletion}
+      />
 
       <ConfirmDialog
         open={leaveOpen}
