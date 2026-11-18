@@ -1,7 +1,10 @@
 import {
+  BarChart3,
   Boxes,
   Building2,
+  CalendarDays,
   Check,
+  CreditCard,
   FileText,
   ChevronsUpDown,
   LayoutDashboard,
@@ -55,9 +58,12 @@ function useNavItems(): NavItem[] {
     { label: 'Overview', to: org.overview, icon: LayoutDashboard },
     { label: 'Documents', to: org.documents, icon: FileText, permission: 'documents:read' },
     { label: 'Renewals', to: org.renewals, icon: RefreshCcw, permission: 'renewals:read' },
+    { label: 'Calendar', to: org.calendar, icon: CalendarDays, permission: 'documents:read' },
     { label: 'Entities', to: org.entities, icon: Boxes, permission: 'entities:read' },
+    { label: 'Reports', to: org.reports, icon: BarChart3, permission: 'reports:read' },
     { label: 'Team', to: org.team, icon: Users, permission: 'members:read' },
     { label: 'Audit Logs', to: org.auditLog, icon: ScrollText, permission: 'audit:read' },
+    { label: 'Billing', to: org.billing, icon: CreditCard },
     { label: 'Settings', to: org.settings, icon: Settings },
   ]
   return items.filter((item) => !item.permission || can(item.permission))

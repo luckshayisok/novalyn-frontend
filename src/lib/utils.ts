@@ -43,3 +43,16 @@ export function formatRelative(iso: string, now: Date = new Date()): string {
   }
   return 'just now'
 }
+
+const ZERO_DECIMAL = new Set(['JPY', 'KRW'])
+
+/** Format an amount given in the smallest currency unit (cents, paise). */
+export function formatMoney(amount: number, currency: string): string {
+  const code = currency.toUpperCase()
+  const value = ZERO_DECIMAL.has(code) ? amount : amount / 100
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: code,
+    maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+  }).format(value)
+}

@@ -58,9 +58,19 @@ export const invitationService = {
 }
 
 export const auditService = {
-  list: (organizationId: string, params: { page: number; pageSize: number; action?: string }) =>
+  list: (
+    organizationId: string,
+    params: { page: number; pageSize: number; action?: string; actor?: string; start?: string; end?: string },
+  ) =>
     api<Page<AuditLogEntry>>(`${org(organizationId)}/audit-logs`, {
-      query: { page: params.page, page_size: params.pageSize, action: params.action },
+      query: {
+        page: params.page,
+        page_size: params.pageSize,
+        action: params.action,
+        actor: params.actor,
+        start: params.start,
+        end: params.end,
+      },
     }),
 }
 

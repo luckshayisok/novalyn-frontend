@@ -442,3 +442,149 @@ export interface AppNotification {
   read_at: string | null
   created_at: string
 }
+
+// ------------------------------------------------------------------ calendar
+
+export type CalendarEventType = 'expiry' | 'expired' | 'renewal_deadline' | 'approval'
+
+export interface CalendarEvent {
+  id: string
+  type: CalendarEventType
+  date: string
+  title: string
+  document_id: string
+  document_name: string
+  category: string
+  status: string
+  renewal_id: string | null
+  owner_name: string | null
+  entity_name: string | null
+}
+
+export interface CalendarRange {
+  start: string
+  end: string
+  today: string
+  events: CalendarEvent[]
+}
+
+// ------------------------------------------------------------------- reports
+
+export interface ReportInfo {
+  key: string
+  title: string
+  description: string
+  feature: PlanFeature
+  allowed: boolean
+  has_period: boolean
+  period_label: string
+  default_start: string | null
+  default_end: string | null
+}
+
+export interface ReportCatalog {
+  reports: ReportInfo[]
+  can_export: boolean
+  csv_export: boolean
+  pdf_export: boolean
+}
+
+export type ReportValue = string | number | null
+
+export interface Report {
+  key: string
+  title: string
+  description: string
+  start: string | null
+  end: string | null
+  generated_at: string
+  columns: { key: string; label: string }[]
+  rows: Record<string, ReportValue>[]
+  summary: { label: string; value: ReportValue }[]
+  truncated: boolean
+}
+
+// ------------------------------------------------------------------- billing
+
+export type PlanKey = 'free' | 'starter' | 'growth' | 'business'
+export type BillingInterval = 'month' | 'year'
+export type PlanFeature =
+  | 'automated_reminders'
+  | 'custom_reminders'
+  | 'basic_reports'
+  | 'advanced_reports'
+  | 'pdf_export'
+  | 'csv_export'
+  | 'document_history'
+  | 'entity_management'
+  | 'multiple_locations'
+  | 'advanced_permissions'
+  | 'custom_integrations'
+  | 'priority_support'
+
+export interface Plan {
+  key: PlanKey
+  name: string
+  description: string
+  max_documents: number | null
+  max_members: number | null
+  max_locations: number | null
+  features: { key: PlanFeature; label: string }[]
+  /** Smallest currency unit, by currency code. Null: contact sales. */
+  monthly_price: Record<string, number> | null
+  yearly_price: Record<string, number> | null
+  self_serve: boolean
+}
+
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete'
+
+export interface Subscription {
+  plan: PlanKey
+  plan_name: string
+  effective_plan: PlanKey
+  status: SubscriptionStatus
+  billing_interval: BillingInterval | null
+  provider: string | null
+  pending_plan: PlanKey | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean
+  custom_limits: boolean
+}
+
+export interface UsageLimit {
+  used: number
+  limit: number | null
+}
+
+export interface Invoice {
+  id: string
+  number: string | null
+  status: 'paid' | 'failed' | 'refunded'
+  amount: number
+  currency: string
+  description: string | null
+  hosted_url: string | null
+  issued_at: string
+  provider: string
+}
+
+export interface PaymentProvider {
+  name: 'stripe' | 'razorpay'
+  label: string
+  currency: string
+  /** "plan:interval" pairs that can be paid with this provider. */
+  available: string[]
+}
+
+export interface Billing {
+  subscription: Subscription
+  features: PlanFeature[]
+  documents: UsageLimit
+  members: UsageLimit
+  locations: UsageLimit
+  invoices: Invoice[]
+  providers: PaymentProvider[]
+  payments_enabled: boolean
+  sales_email: string
+  plans: Plan[]
+}

@@ -39,6 +39,13 @@ function roleLabel(value: unknown): string {
   return role in ROLE_LABELS ? ROLE_LABELS[role as Role] : role
 }
 
+const PLAN_NAMES: Record<string, string> = { free: 'Free', starter: 'Starter', growth: 'Growth', business: 'Business' }
+
+function planName(value: unknown): string {
+  const plan = text(value)
+  return PLAN_NAMES[plan] ?? plan
+}
+
 /** A plain-language sentence for an audit entry, written without the actor ("Invited x as Member"). */
 export function describeAuditEntry(entry: AuditLogEntry): string {
   const data = entry.metadata
@@ -115,6 +122,20 @@ export function describeAuditEntry(entry: AuditLogEntry): string {
       return `Archived ${text(data.name)}`
     case 'entity.restored':
       return `Restored ${text(data.name)}`
+    case 'report.exported':
+      return `Exported the ${text(data.name)} report as ${String(data.format ?? '').toUpperCase()}`
+    case 'billing.checkout_started':
+      return `Started paying for the ${planName(data.plan)} plan`
+    case 'billing.cancellation_requested':
+      return `Cancelled the ${planName(data.plan)} subscription at the end of the paid period`
+    case 'billing.plan_changed':
+      return `Plan changed from ${planName(data.from_plan)} to ${planName(data.plan)}`
+    case 'billing.status_changed':
+      return `Subscription status changed to ${text(data.status).replace('_', ' ')}`
+    case 'billing.payment_failed':
+      return `A payment for the ${planName(data.plan)} plan failed`
+    case 'billing.subscription_ended':
+      return `The ${planName(data.from_plan)} subscription ended; the organization is on the Free plan`
     default:
       return entry.action
   }
@@ -127,5 +148,7 @@ export function describeAfterActor(entry: AuditLogEntry): string {
 }
 
 export function actorName(entry: AuditLogEntry): string {
-  return entry.actor?.full_name ?? 'Deleted user'
+  if (entry.actor) return entry.actor.full_name
+  // Billing changes reported by the payment provider, and plan changes made by our team, have no person behind them.
+  return entry.action.startsWith('billing.') ? 'NOVALYN billing' : 'Deleted user'
 }

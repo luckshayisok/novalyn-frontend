@@ -7,12 +7,12 @@ import { EmptyState, ErrorState } from '@/components/shared/states'
 import { Skeleton } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Label } from '@/components/ui/input'
+import { Input, Label } from '@/components/ui/input'
 import { NativeSelect } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useOrganization } from '@/hooks/useOrganization'
 import { formatDateTime } from '@/lib/utils'
-import { auditService, queryKeys } from '@/services/organizations'
+import { auditService, memberService, queryKeys } from '@/services/organizations'
 
 import { actorName, describeAuditEntry } from './describe'
 
@@ -25,14 +25,32 @@ const FILTERS = [
   { value: 'entity.', label: 'Entities' },
   { value: 'member.', label: 'Team' },
   { value: 'organization.', label: 'Organization' },
+  { value: 'report.', label: 'Reports' },
+  { value: 'billing.', label: 'Billing' },
 ] as const
 
 export function AuditLogPage() {
   const { organization } = useOrganization()
   const [page, setPage] = useState(1)
   const [action, setAction] = useState<string>('')
+  const [actor, setActor] = useState<string>('')
+  const [start, setStart] = useState<string>('')
+  const [end, setEnd] = useState<string>('')
+  const filtered = Boolean(action || actor || start || end)
 
-  const params = { page, pageSize: PAGE_SIZE, action: action || undefined }
+  const members = useQuery({
+    queryKey: queryKeys.members(organization.id),
+    queryFn: () => memberService.list(organization.id),
+  })
+
+  const params = {
+    page,
+    pageSize: PAGE_SIZE,
+    action: action || undefined,
+    actor: actor || undefined,
+    start: start || undefined,
+    end: end || undefined,
+  }
   const log = useQuery({
     queryKey: queryKeys.auditLogs(organization.id, params),
     queryFn: () => auditService.list(organization.id, params),
@@ -51,11 +69,9 @@ export function AuditLogPage() {
         description="A permanent record of changes in this organization. Entries cannot be edited or deleted."
       />
 
-      <div className="mb-4 flex items-center gap-2.5">
-        <Label htmlFor="audit-filter" className="text-muted-foreground">
-          Show
-        </Label>
-        <div className="w-48">
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="flex w-44 flex-col gap-1.5">
+          <Label htmlFor="audit-filter">Area</Label>
           <NativeSelect
             id="audit-filter"
             value={action}
@@ -71,6 +87,68 @@ export function AuditLogPage() {
             ))}
           </NativeSelect>
         </div>
+        <div className="flex w-52 flex-col gap-1.5">
+          <Label htmlFor="audit-actor">Person</Label>
+          <NativeSelect
+            id="audit-actor"
+            value={actor}
+            onChange={(event) => {
+              setActor(event.target.value)
+              setPage(1)
+            }}
+          >
+            <option value="">Everyone</option>
+            {(members.data ?? []).map((member) => (
+              <option key={member.user.id} value={member.user.id}>
+                {member.user.full_name}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="audit-start">From</Label>
+          <Input
+            id="audit-start"
+            type="date"
+            className="w-40"
+            value={start}
+            max={end || undefined}
+            onChange={(event) => {
+              setStart(event.target.value)
+              setPage(1)
+            }}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="audit-end">To</Label>
+          <Input
+            id="audit-end"
+            type="date"
+            className="w-40"
+            value={end}
+            min={start || undefined}
+            onChange={(event) => {
+              setEnd(event.target.value)
+              setPage(1)
+            }}
+          />
+        </div>
+        {filtered && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-0.5"
+            onClick={() => {
+              setAction('')
+              setActor('')
+              setStart('')
+              setEnd('')
+              setPage(1)
+            }}
+          >
+            Clear filters
+          </Button>
+        )}
       </div>
 
       <Card className={log.isPlaceholderData ? 'opacity-70 transition-opacity' : undefined}>
@@ -87,7 +165,7 @@ export function AuditLogPage() {
             icon={ScrollText}
             title="No entries"
             description={
-              action ? 'Nothing matches this filter yet.' : 'Changes to the team and settings will appear here.'
+              filtered ? 'Nothing matches these filters.' : 'Changes to the team and settings will appear here.'
             }
           />
         ) : (

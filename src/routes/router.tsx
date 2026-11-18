@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 
 import { AuditLogPage } from '@/features/audit/AuditLogPage'
+import { BillingPage } from '@/features/billing/BillingPage'
+import { CalendarPage } from '@/features/calendar/CalendarPage'
+import { ReportsPage } from '@/features/reports/ReportsPage'
 import { DocumentDetailPage } from '@/features/documents/DocumentDetailPage'
 import { DocumentsPage } from '@/features/documents/DocumentsPage'
 import { UploadPage } from '@/features/documents/UploadPage'
@@ -70,6 +73,16 @@ export const router = createBrowserRouter([
               { path: 'renewals/:renewalId', element: <RenewalDetailPage /> },
               { path: 'entities', element: <EntitiesPage /> },
               { path: 'entities/:entityId', element: <EntityDetailPage /> },
+              { path: 'calendar', element: <CalendarPage /> },
+              {
+                path: 'reports',
+                element: (
+                  <RequirePermission permission="reports:read">
+                    <ReportsPage />
+                  </RequirePermission>
+                ),
+              },
+              { path: 'billing', element: <BillingPage /> },
               { path: 'team', element: <TeamPage /> },
               {
                 path: 'audit-log',

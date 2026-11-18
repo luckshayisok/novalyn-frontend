@@ -126,24 +126,19 @@ export interface RequestOptions {
 
 const REFRESHABLE_CODES = new Set(['invalid_token', 'not_authenticated', 'session_revoked'])
 
-export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, query, auth = true, signal } = options
-
-  let url = path
-  if (query) {
-    const params = new URLSearchParams()
-    for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined && value !== null && value !== '') params.set(key, String(value))
-    }
-    const text = params.toString()
-    if (text) url += `?${text}`
+function withQuery(path: string, query?: RequestOptions['query']): string {
+  if (!query) return path
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== null && value !== '') params.set(key, String(value))
   }
+  const text = params.toString()
+  return text ? `${path}?${text}` : path
+}
 
-  const init: RequestInit = { method, signal }
-  if (body !== undefined) init.body = JSON.stringify(body)
-
+/** Send a request; on an expired access token, refresh once and send it again. */
+async function sendWithRefresh(url: string, init: RequestInit, auth: boolean): Promise<Response> {
   let response = await send(url, init, auth)
-
   if (response.status === 401 && auth) {
     const failure = await toApiError(response)
     if (!REFRESHABLE_CODES.has(failure.code)) throw failure
@@ -154,10 +149,37 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
     }
     response = await send(url, init, auth)
   }
-
   if (!response.ok) throw await toApiError(response)
+  return response
+}
+
+export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, query, auth = true, signal } = options
+  const init: RequestInit = { method, signal }
+  if (body !== undefined) init.body = JSON.stringify(body)
+
+  const response = await sendWithRefresh(withQuery(path, query), init, auth)
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
+}
+
+/** Fetch a file the API generates (a report export) and hand it to the browser as a download. */
+export async function downloadFile(path: string, query: RequestOptions['query'], fallbackName: string): Promise<void> {
+  const response = await sendWithRefresh(withQuery(path, query), { method: 'GET' }, true)
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? fallbackName
+  const url = URL.createObjectURL(await response.blob())
+  try {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.append(link)
+    link.click()
+    link.remove()
+  } finally {
+    // Give the browser a moment to start the download before the URL is released.
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
 }
 
 function sendUpload(path: string, form: FormData, onProgress?: (fraction: number) => void): Promise<XMLHttpRequest> {
